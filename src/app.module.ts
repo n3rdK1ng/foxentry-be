@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { validate } from './env.validation';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { validate } from './env.validation';
       validate: validate,
       isGlobal: true,
     }),
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
