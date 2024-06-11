@@ -10,10 +10,10 @@ import {
   Post,
   UsePipes,
   ValidationPipe,
-} from '@nestjs/common';
+} from '@nestjs/common'
 
-import { ProductDto } from './products.dto';
-import { ProductsService } from './products.service';
+import { ProductDto } from './products.dto'
+import { ProductsService } from './products.service'
 
 @Controller('/products')
 export class ProductsController {
@@ -21,34 +21,34 @@ export class ProductsController {
 
   @Get()
   async listAllProducts() {
-    return this.searchService.listAllProducts();
+    return this.searchService.listAllProducts()
   }
 
   @Post(':id')
   @UsePipes(new ValidationPipe())
   async addProductDocument(@Param('id') id: string, @Body() body: ProductDto) {
-    const productExists = await this.searchService.productExists(body.name);
+    const productExists = await this.searchService.productExists(body.name)
 
     if (productExists) {
-      throw new HttpException('Product already exists', HttpStatus.CONFLICT);
+      throw new HttpException('Product already exists', HttpStatus.CONFLICT)
     }
 
-    return this.searchService.addProductDocument(id, body);
+    return this.searchService.addProductDocument(id, body)
   }
 
   @Patch(':id')
   @UsePipes(new ValidationPipe())
   async updateProduct(@Param('id') id: string, @Body() body: ProductDto) {
-    return this.searchService.addProductDocument(id, body);
+    return this.searchService.addProductDocument(id, body)
   }
 
   @Delete(':id')
   async deleteProduct(@Param('id') id: string) {
-    return this.searchService.deleteProduct(id);
+    return this.searchService.deleteProduct(id)
   }
 
   @Get(':query')
   async search(@Param('query') query: string) {
-    return this.searchService.search(query);
+    return this.searchService.search(query)
   }
 }
