@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
-import { ElasticsearchModule } from '@nestjs/elasticsearch';
-import { config } from 'dotenv';
-import { env } from 'process';
+import { Module } from '@nestjs/common'
+import { ElasticsearchModule } from '@nestjs/elasticsearch'
+import { config } from 'dotenv'
+import { env } from 'process'
 
-config();
+config()
 
 @Module({
   imports: [
