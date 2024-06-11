@@ -15,6 +15,12 @@ class EnvironmentVariables {
   ELASTIC_PASSWORD: string;
 }
 
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv extends EnvironmentVariables {}
+  }
+}
+
 export const validate = (config: Record<string, unknown>) => {
   const validatedConfig = plainToInstance(EnvironmentVariables, config, {
     enableImplicitConversion: true,
