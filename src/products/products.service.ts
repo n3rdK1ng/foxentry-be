@@ -18,7 +18,7 @@ export class ProductsService {
           mappings: {
             properties: {
               name: { type: 'text' },
-              cost: { type: 'double' },
+              price: { type: 'double' },
               stock: { type: 'integer' },
             },
           },
