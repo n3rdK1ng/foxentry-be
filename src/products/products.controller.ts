@@ -55,7 +55,12 @@ export class ProductsController {
   }
 
   @Get(':query')
-  async search(@Param('query') query: string) {
-    return this.searchService.search(query)
+  async getProduct(@Param('query') query: string) {
+    return this.searchService.getProduct(query)
+  }
+
+  @Get('/search/:query')
+  async searchProduct(@Param('query') query: string) {
+    return this.searchService.searchProducts(query)
   }
 }
