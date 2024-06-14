@@ -27,6 +27,13 @@ export class ProductsController {
   @Post(':id')
   @UsePipes(new ValidationPipe())
   async addProductDocument(@Param('id') id: string, @Body() body: ProductDto) {
+    if (id !== body.name) {
+      throw new HttpException(
+        'ID must be the same as product name',
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
     const productExists = await this.searchService.productExists(body.name)
 
     if (productExists) {
