@@ -1,6 +1,7 @@
 {
   "singleQuote": true,
   "semi": false,
+  "endOfLine": "lf",
   "trailingComma": "all",
   "importOrder": ["^@core/(.*)$", "^@server/(.*)$", "^@ui/(.*)$", "^[./]"],
   "importOrderSeparation": true,
