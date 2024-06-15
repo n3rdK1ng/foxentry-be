@@ -1,3 +1,9 @@
+import type {
+  AggregationsAggregate,
+  QueryDslQueryContainer,
+  SearchResponse,
+  Sort,
+} from '@elastic/elasticsearch/lib/api/types'
 import { Injectable } from '@nestjs/common'
 import { ElasticsearchService } from '@nestjs/elasticsearch'
 
@@ -17,7 +23,14 @@ export class ProductsService {
         body: {
           mappings: {
             properties: {
-              name: { type: 'text' },
+              name: {
+                type: 'text',
+                fields: {
+                  keyword: {
+                    type: 'keyword',
+                  },
+                },
+              },
               price: { type: 'double' },
               stock: { type: 'integer' },
             },
@@ -28,13 +41,13 @@ export class ProductsService {
   }
 
   async productExists(name: string): Promise<boolean> {
+    await this.createProductsIndex(index)
+
     const products = await this.getProduct(name)
     return products.length > 0
   }
 
   async addProductDocument(id: string, product: Product): Promise<any> {
-    await this.createProductsIndex(index)
-
     return this.elasticsearchService.index({
       index,
       id,
@@ -57,13 +70,27 @@ export class ProductsService {
     })
   }
 
-  async listAllProducts(): Promise<Product[]> {
-    return this.search({
-      match_all: {},
-    })
+  async listAllProducts(
+    sortBy: 'name' | 'price' | 'stock',
+    order: 'asc' | 'desc',
+  ): Promise<Product[]> {
+    const sortField = sortBy === 'name' ? `${sortBy}.keyword` : sortBy
+    const sortQuery = {}
+    sortQuery[sortField] = { order }
+
+    return this.search(
+      {
+        match_all: {},
+      },
+      sortQuery,
+    )
   }
 
-  async searchProducts(query: string): Promise<Product[]> {
+  async searchProducts(
+    query: string,
+    sortBy: 'name' | 'price' | 'stock',
+    order: 'asc' | 'desc',
+  ): Promise<Product[]> {
     const isNumber = !isNaN(Number(query))
 
     const shouldQuery: SearchQueryType[] = [
@@ -77,23 +104,36 @@ export class ProductsService {
       shouldQuery.push(rangeQuery.price, rangeQuery.stock)
     }
 
-    return this.search({
-      bool: {
-        should: shouldQuery,
-        minimum_should_match: 1,
+    const sortField = sortBy === 'name' ? `${sortBy}.keyword` : sortBy
+    const sortQuery = {}
+    sortQuery[sortField] = { order }
+
+    return this.search(
+      {
+        bool: {
+          should: shouldQuery,
+          minimum_should_match: 1,
+        },
       },
-    })
+      sortQuery,
+    )
   }
 
-  private mapHitsToProducts(response: any): Product[] {
-    return response.hits.hits.map((hit: any) => hit._source as Product)
+  private mapHitsToProducts(
+    response: SearchResponse<unknown, Record<string, AggregationsAggregate>>,
+  ) {
+    return response.hits.hits.map((hit) => hit._source as Product)
   }
 
-  private async search(query: any): Promise<Product[]> {
+  private async search(
+    query: QueryDslQueryContainer,
+    sort?: Sort,
+  ): Promise<Product[]> {
     const response = await this.elasticsearchService.search({
       index,
       body: {
         query,
+        sort: sort,
       },
     })
 

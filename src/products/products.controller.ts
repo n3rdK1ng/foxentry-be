@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common'
@@ -18,11 +19,6 @@ import { ProductsService } from './products.service'
 @Controller('/products')
 export class ProductsController {
   constructor(private readonly searchService: ProductsService) {}
-
-  @Get()
-  async listAllProducts() {
-    return this.searchService.listAllProducts()
-  }
 
   @Post(':id')
   @UsePipes(new ValidationPipe())
@@ -59,8 +55,20 @@ export class ProductsController {
     return this.searchService.getProduct(query)
   }
 
+  @Get()
+  async listAllProducts(
+    @Query('sort-by') sortBy: 'name' | 'price' | 'stock' = 'name',
+    @Query('order') order: 'asc' | 'desc' = 'asc',
+  ) {
+    return this.searchService.listAllProducts(sortBy, order)
+  }
+
   @Get('/search/:query')
-  async searchProduct(@Param('query') query: string) {
-    return this.searchService.searchProducts(query)
+  async searchProducts(
+    @Param('query') query: string,
+    @Query('sort-by') sortBy: 'name' | 'price' | 'stock' = 'name',
+    @Query('order') order: 'asc' | 'desc' = 'asc',
+  ) {
+    return this.searchService.searchProducts(query, sortBy, order)
   }
 }
