@@ -15,11 +15,13 @@ class EnvironmentVariables {
   ELASTIC_PASSWORD: string
 }
 
+/* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace NodeJS {
     interface ProcessEnv extends EnvironmentVariables {}
   }
 }
+/* eslint-enable @typescript-eslint/no-namespace */
 
 export const validate = (config: Record<string, unknown>) => {
   const validatedConfig = plainToInstance(EnvironmentVariables, config, {
