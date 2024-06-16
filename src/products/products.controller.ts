@@ -12,10 +12,15 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common'
-import { ApiQuery } from '@nestjs/swagger'
-import { ApiOkResponse, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
+import {
+  ApiOkResponse,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger'
 
-import { ProductDto } from './products.dto'
+import { ProductResponseDto } from './products.dto'
 import { ProductsService } from './products.service'
 import { Order, SortBy } from './products.types'
 
@@ -27,15 +32,11 @@ export class ProductsController {
   @Post(':id')
   @ApiResponse({ status: 201, description: 'Product created' })
   @UsePipes(new ValidationPipe())
-  async addProductDocument(@Param('id') id: string, @Body() body: ProductDto) {
-    if (id !== body.name) {
-      throw new HttpException(
-        'ID must be the same as product name',
-        HttpStatus.BAD_REQUEST,
-      )
-    }
-
-    const productExists = await this.searchService.productExists(body.name)
+  async addProductDocument(
+    @Param('id') id: string,
+    @Body() body: ProductResponseDto,
+  ) {
+    const productExists = await this.searchService.productExists(id)
 
     if (productExists) {
       throw new HttpException('Product already exists', HttpStatus.CONFLICT)
@@ -49,7 +50,10 @@ export class ProductsController {
     description: 'Product patched',
   })
   @UsePipes(new ValidationPipe())
-  async updateProduct(@Param('id') id: string, @Body() body: ProductDto) {
+  async updateProduct(
+    @Param('id') id: string,
+    @Body() body: ProductResponseDto,
+  ) {
     return this.searchService.addProductDocument(id, body)
   }
 
@@ -61,14 +65,14 @@ export class ProductsController {
     return this.searchService.deleteProduct(id)
   }
 
-  @Get(':query')
-  @ApiParam({ name: 'query', required: true, description: 'Product query' })
+  @Get(':id')
+  @ApiParam({ name: 'ID', required: true, description: 'Product ID' })
   @ApiOkResponse({
-    type: ProductDto,
+    type: ProductResponseDto,
     description: 'Product found',
   })
-  async getProduct(@Param('query') query: string) {
-    return this.searchService.getProduct(query)
+  async getProduct(@Param('id') id: string) {
+    return this.searchService.getProduct(id)
   }
 
   @Get()
@@ -85,8 +89,8 @@ export class ProductsController {
     enum: Order,
   })
   @ApiOkResponse({
-    type: ProductDto,
-    description: 'List of products founds',
+    type: ProductResponseDto,
+    description: 'List of products found',
   })
   async listAllProducts(
     @Query('sort-by') sortBy: 'name' | 'price' | 'stock' = 'name',
@@ -110,7 +114,7 @@ export class ProductsController {
     enum: Order,
   })
   @ApiOkResponse({
-    type: ProductDto,
+    type: ProductResponseDto,
     description: 'List of products found',
   })
   async searchProducts(

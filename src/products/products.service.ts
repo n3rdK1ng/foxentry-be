@@ -7,7 +7,8 @@ import type {
 import { Injectable } from '@nestjs/common'
 import { ElasticsearchService } from '@nestjs/elasticsearch'
 
-import type { Product, SearchQueryType } from './products.types'
+import type { ProductDto, ProductResponseDto } from './products.dto'
+import type { SearchQueryType } from './products.types'
 
 const index = 'products'
 
@@ -40,14 +41,15 @@ export class ProductsService {
     }
   }
 
-  async productExists(name: string): Promise<boolean> {
+  async productExists(id: string): Promise<boolean> {
     await this.createProductsIndex(index)
 
-    const product = await this.getProduct(name)
-    return product !== null
+    const product = await this.getProduct(id)
+
+    return !!product
   }
 
-  async addProductDocument(id: string, product: Product): Promise<any> {
+  async addProductDocument(id: string, product: ProductDto): Promise<any> {
     return this.elasticsearchService.index({
       index,
       id,
@@ -62,10 +64,10 @@ export class ProductsService {
     })
   }
 
-  async getProduct(query: string): Promise<Product> {
+  async getProduct(id: string): Promise<ProductResponseDto> {
     const results = await this.search({
       match: {
-        name: query,
+        _id: id,
       },
     })
 
@@ -75,7 +77,7 @@ export class ProductsService {
   async listAllProducts(
     sortBy: 'name' | 'price' | 'stock',
     order: 'asc' | 'desc',
-  ): Promise<Product[]> {
+  ): Promise<ProductResponseDto[]> {
     const sortField = sortBy === 'name' ? `${sortBy}.keyword` : sortBy
     const sortQuery = {}
     sortQuery[sortField] = { order }
@@ -92,7 +94,7 @@ export class ProductsService {
     query: string,
     sortBy: 'name' | 'price' | 'stock',
     order: 'asc' | 'desc',
-  ): Promise<Product[]> {
+  ): Promise<ProductResponseDto[]> {
     const isNumber = !isNaN(Number(query))
 
     const shouldQuery: SearchQueryType[] = [
@@ -124,13 +126,16 @@ export class ProductsService {
   private mapHitsToProducts(
     response: SearchResponse<unknown, Record<string, AggregationsAggregate>>,
   ) {
-    return response.hits.hits.map((hit) => hit._source as Product)
+    return response.hits.hits.map((hit) => ({
+      id: hit._id,
+      ...(hit._source as ProductResponseDto),
+    }))
   }
 
   private async search(
     query: QueryDslQueryContainer,
     sort?: Sort,
-  ): Promise<Product[]> {
+  ): Promise<ProductResponseDto[]> {
     const response = await this.elasticsearchService.search({
       index,
       body: {
