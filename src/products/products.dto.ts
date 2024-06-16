@@ -5,6 +5,11 @@ export class ProductDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
+  id: string
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   name: string
 
   @ApiProperty()
@@ -16,9 +21,4 @@ export class ProductDto {
   @IsNumber()
   @IsNotEmpty()
   stock: number
-}
-
-export class ProductResponseDto extends ProductDto {
-  @ApiProperty()
-  id: string
 }

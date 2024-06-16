@@ -7,7 +7,7 @@ import type {
 import { Injectable } from '@nestjs/common'
 import { ElasticsearchService } from '@nestjs/elasticsearch'
 
-import type { ProductDto, ProductResponseDto } from './products.dto'
+import type { ProductDto } from './products.dto'
 import type { SearchQueryType } from './products.types'
 
 const index = 'products'
@@ -41,7 +41,7 @@ export class ProductsService {
     }
   }
 
-  async productExists(id: string): Promise<boolean> {
+  async productExists(id: string) {
     await this.createProductsIndex(index)
 
     const product = await this.getProduct(id)
@@ -49,22 +49,38 @@ export class ProductsService {
     return !!product
   }
 
-  async addProductDocument(id: string, product: ProductDto): Promise<any> {
-    return this.elasticsearchService.index({
+  async addProductDocument(
+    id: string,
+    product: ProductDto,
+    variant: 'created' | 'updated',
+  ): Promise<ProductDto> {
+    const response = await this.elasticsearchService.index({
       index,
       id,
       body: product,
     })
+
+    if (response.result !== variant) {
+      throw new Error('Failed to add product to Elasticsearch')
+    }
+
+    return product
   }
 
-  async deleteProduct(id: string): Promise<any> {
-    return this.elasticsearchService.delete({
+  async deleteProduct(id: string) {
+    const response = await this.elasticsearchService.delete({
       index,
       id,
     })
+
+    if (response.result !== 'deleted') {
+      throw new Error('Failed to delete product from Elasticsearch')
+    }
+
+    return response
   }
 
-  async getProduct(id: string): Promise<ProductResponseDto> {
+  async getProduct(id: string): Promise<ProductDto> {
     const results = await this.search({
       match: {
         _id: id,
@@ -77,7 +93,7 @@ export class ProductsService {
   async listAllProducts(
     sortBy: 'name' | 'price' | 'stock',
     order: 'asc' | 'desc',
-  ): Promise<ProductResponseDto[]> {
+  ): Promise<ProductDto[]> {
     const sortField = sortBy === 'name' ? `${sortBy}.keyword` : sortBy
     const sortQuery = {}
     sortQuery[sortField] = { order }
@@ -94,7 +110,7 @@ export class ProductsService {
     query: string,
     sortBy: 'name' | 'price' | 'stock',
     order: 'asc' | 'desc',
-  ): Promise<ProductResponseDto[]> {
+  ): Promise<ProductDto[]> {
     const isNumber = !isNaN(Number(query))
 
     const shouldQuery: SearchQueryType[] = [
@@ -128,14 +144,14 @@ export class ProductsService {
   ) {
     return response.hits.hits.map((hit) => ({
       id: hit._id,
-      ...(hit._source as ProductResponseDto),
+      ...(hit._source as ProductDto),
     }))
   }
 
   private async search(
     query: QueryDslQueryContainer,
     sort?: Sort,
-  ): Promise<ProductResponseDto[]> {
+  ): Promise<ProductDto[]> {
     const response = await this.elasticsearchService.search({
       index,
       body: {
