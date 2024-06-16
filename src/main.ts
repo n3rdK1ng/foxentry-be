@@ -10,8 +10,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Foxentry API docs')
-    // TODO: change the URL to the actual API URL
-    .setDescription('[JSON API](http://localhost:3000/api-json)')
+    .setDescription('[JSON API](http://foxentry-be.vercel.app/api-json)')
     .setVersion('1.0')
     .build()
 
