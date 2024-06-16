@@ -17,3 +17,8 @@ export class ProductDto {
   @IsNotEmpty()
   stock: number
 }
+
+export class ProductResponseDto extends ProductDto {
+  @ApiProperty()
+  id: string
+}
