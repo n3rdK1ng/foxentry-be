@@ -98,6 +98,8 @@ export class ProductsService {
     const sortQuery = {}
     sortQuery[sortField] = { order }
 
+    await this.createProductsIndex(index)
+
     return this.search(
       {
         match_all: {},
