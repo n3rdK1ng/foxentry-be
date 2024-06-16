@@ -184,7 +184,7 @@ export class OrdersController {
     return this.ordersService.searchOrders(query, sortBy, order)
   }
 
-  @Get('/search/:variant/:id/:query')
+  @Get('/search/:variant/:id/:query?')
   @ApiParam({
     name: 'variant',
     required: true,
@@ -192,7 +192,7 @@ export class OrdersController {
     enum: ['productId', 'customerId'],
   })
   @ApiParam({ name: 'id', required: true, description: 'ID' })
-  @ApiParam({ name: 'query', required: true, description: 'Search query' })
+  @ApiParam({ name: 'query', required: false, description: 'Search query' })
   @ApiQuery({
     name: 'sort-by',
     required: false,
@@ -212,10 +212,14 @@ export class OrdersController {
   async searchByFixedId(
     @Param('variant') variant: 'productId' | 'customerId',
     @Param('id') id: string,
-    @Param('query') query: string,
+    @Param('query') query: string = '',
     @Query('sort-by') sortBy: SortBy = SortBy.PRODUCT_NAME,
     @Query('order') order: Order = Order.ASC,
   ) {
-    return this.ordersService.searchByFixedId(variant, id, query, sortBy, order)
+    if (query.trim()) {
+      return this.ordersService.searchOrders(query, sortBy, order, variant, id)
+    } else {
+      return this.ordersService.listAllOrders(sortBy, order, variant, id)
+    }
   }
 }

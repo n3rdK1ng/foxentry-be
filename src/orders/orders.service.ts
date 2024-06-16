@@ -87,7 +87,12 @@ export class OrdersService {
     return results[0]
   }
 
-  async listAllOrders(sortBy: SortBy, order: Order): Promise<OrderDto[]> {
+  async listAllOrders(
+    sortBy: SortBy,
+    order: Order,
+    variant?: 'productId' | 'customerId',
+    id?: string,
+  ): Promise<OrderDto[]> {
     const sortField =
       sortBy === SortBy.PRODUCT_NAME || sortBy === SortBy.CUSTOMER_NAME
         ? `${sortBy}.keyword`
@@ -97,18 +102,18 @@ export class OrdersService {
 
     await this.createOrdersIndex(index)
 
-    return this.search(
-      {
-        match_all: {},
-      },
-      sortQuery,
-    )
+    const searchQuery =
+      variant && id ? { match: { [variant]: id } } : { match_all: {} }
+
+    return this.search(searchQuery, sortQuery)
   }
 
   async searchOrders(
     query: string,
     sortBy: SortBy,
     order: Order,
+    variant?: 'productId' | 'customerId',
+    id?: string,
   ): Promise<OrderDto[]> {
     const isNumber = !isNaN(Number(query))
 
@@ -133,38 +138,15 @@ export class OrdersService {
     const sortQuery = {}
     sortQuery[sortField] = { order }
 
-    return this.search(
-      {
-        bool: {
-          should: shouldQuery,
-          minimum_should_match: 1,
-        },
-      },
-      sortQuery,
-    )
-  }
-
-  async searchByFixedId(
-    variant: 'productId' | 'customerId',
-    id: string,
-    query: string,
-    sortBy: SortBy,
-    order: Order,
-  ): Promise<OrderDto[]> {
-    const fixedIdQuery: QueryDslQueryContainer = {
+    const searchQuery = {
       bool: {
-        should: [{ term: { [variant]: id } }],
+        should: shouldQuery,
         minimum_should_match: 1,
+        filter: variant && id ? [{ term: { [variant]: id } }] : [],
       },
     }
 
-    const combinedQuery: string = JSON.stringify({
-      bool: {
-        must: [JSON.parse(query), fixedIdQuery],
-      },
-    })
-
-    return this.searchOrders(combinedQuery, sortBy, order)
+    return this.search(searchQuery, sortQuery)
   }
 
   private mapHitsToOrders(
