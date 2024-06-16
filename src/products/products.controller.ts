@@ -5,22 +5,26 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  NotFoundException,
   Param,
   Patch,
   Post,
   Query,
+  Res,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common'
 import {
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiParam,
   ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger'
+import { Response } from 'express'
 
-import { ProductResponseDto } from './products.dto'
+import { ProductDto } from './products.dto'
 import { ProductsService } from './products.service'
 import { Order, SortBy } from './products.types'
 
@@ -30,11 +34,16 @@ export class ProductsController {
   constructor(private readonly searchService: ProductsService) {}
 
   @Post(':id')
-  @ApiResponse({ status: 201, description: 'Product created' })
+  @ApiResponse({
+    status: 201,
+    type: ProductDto,
+    description: 'Product created',
+  })
   @UsePipes(new ValidationPipe())
   async addProductDocument(
     @Param('id') id: string,
-    @Body() body: ProductResponseDto,
+    @Body() body: ProductDto,
+    @Res() res: Response,
   ) {
     const productExists = await this.searchService.productExists(id)
 
@@ -42,19 +51,29 @@ export class ProductsController {
       throw new HttpException('Product already exists', HttpStatus.CONFLICT)
     }
 
-    return this.searchService.addProductDocument(id, body)
+    const product = await this.searchService.addProductDocument(
+      id,
+      body,
+      'created',
+    )
+
+    return res.status(201).json(product)
   }
 
   @Patch(':id')
   @ApiOkResponse({
+    type: ProductDto,
     description: 'Product patched',
   })
   @UsePipes(new ValidationPipe())
   async updateProduct(
     @Param('id') id: string,
-    @Body() body: ProductResponseDto,
+    @Body() body: ProductDto,
+    @Res() res: Response,
   ) {
-    return this.searchService.addProductDocument(id, body)
+    const product = this.searchService.addProductDocument(id, body, 'updated')
+
+    return res.status(200).json(product)
   }
 
   @Delete(':id')
@@ -68,11 +87,16 @@ export class ProductsController {
   @Get(':id')
   @ApiParam({ name: 'ID', required: true, description: 'Product ID' })
   @ApiOkResponse({
-    type: ProductResponseDto,
+    type: ProductDto,
     description: 'Product found',
   })
+  @ApiNotFoundResponse({ description: 'Product not found' })
   async getProduct(@Param('id') id: string) {
-    return this.searchService.getProduct(id)
+    const product = await this.searchService.getProduct(id)
+    if (!product) {
+      throw new NotFoundException('Product not found')
+    }
+    return product
   }
 
   @Get()
@@ -89,7 +113,7 @@ export class ProductsController {
     enum: Order,
   })
   @ApiOkResponse({
-    type: ProductResponseDto,
+    type: ProductDto,
     description: 'List of products found',
   })
   async listAllProducts(
@@ -114,7 +138,7 @@ export class ProductsController {
     enum: Order,
   })
   @ApiOkResponse({
-    type: ProductResponseDto,
+    type: ProductDto,
     description: 'List of products found',
   })
   async searchProducts(
