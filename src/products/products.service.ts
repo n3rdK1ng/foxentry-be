@@ -43,8 +43,8 @@ export class ProductsService {
   async productExists(name: string): Promise<boolean> {
     await this.createProductsIndex(index)
 
-    const products = await this.getProduct(name)
-    return products.length > 0
+    const product = await this.getProduct(name)
+    return product !== null
   }
 
   async addProductDocument(id: string, product: Product): Promise<any> {
@@ -62,12 +62,14 @@ export class ProductsService {
     })
   }
 
-  async getProduct(query: string): Promise<Product[]> {
-    return this.search({
+  async getProduct(query: string): Promise<Product> {
+    const results = await this.search({
       match: {
         name: query,
       },
     })
+
+    return results[0]
   }
 
   async listAllProducts(
