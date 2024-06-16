@@ -85,8 +85,6 @@ export class OrdersController {
       throw new HttpException('Insufficient stock', HttpStatus.BAD_REQUEST)
     }
 
-    const order = await this.ordersService.addOrderDocument(id, body)
-
     await this.productsService.addProductDocument(
       currentProduct.id,
       {
@@ -108,6 +106,13 @@ export class OrdersController {
       },
       'updated',
     )
+
+    const order = await this.ordersService.addOrderDocument(id, {
+      ...body,
+      price: currentProduct.price * body.amount,
+      productName: currentProduct.name,
+      customerName: currentCustomer.name,
+    })
 
     return res.status(201).json(order)
   }
