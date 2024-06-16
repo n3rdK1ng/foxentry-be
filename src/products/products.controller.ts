@@ -15,6 +15,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common'
 import {
+  ApiConflictResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiParam,
@@ -31,7 +32,7 @@ import { Order, SortBy } from './products.types'
 @ApiTags('Products')
 @Controller('/products')
 export class ProductsController {
-  constructor(private readonly searchService: ProductsService) {}
+  constructor(private readonly productsService: ProductsService) {}
 
   @Post(':id')
   @ApiResponse({
@@ -39,19 +40,22 @@ export class ProductsController {
     type: ProductDto,
     description: 'Product created',
   })
+  @ApiConflictResponse({
+    description: 'Product already exists',
+  })
   @UsePipes(new ValidationPipe())
   async addProductDocument(
     @Param('id') id: string,
     @Body() body: ProductDto,
     @Res() res: Response,
   ) {
-    const productExists = await this.searchService.productExists(id)
+    const productExists = await this.productsService.productExists(id)
 
     if (productExists) {
       throw new HttpException('Product already exists', HttpStatus.CONFLICT)
     }
 
-    const product = await this.searchService.addProductDocument(
+    const product = await this.productsService.addProductDocument(
       id,
       body,
       'created',
@@ -71,7 +75,7 @@ export class ProductsController {
     @Body() body: ProductDto,
     @Res() res: Response,
   ) {
-    const product = this.searchService.addProductDocument(id, body, 'updated')
+    const product = this.productsService.addProductDocument(id, body, 'updated')
 
     return res.status(200).json(product)
   }
@@ -81,7 +85,7 @@ export class ProductsController {
     description: 'Product deleted',
   })
   async deleteProduct(@Param('id') id: string) {
-    return this.searchService.deleteProduct(id)
+    return this.productsService.deleteProduct(id)
   }
 
   @Get(':id')
@@ -92,7 +96,7 @@ export class ProductsController {
   })
   @ApiNotFoundResponse({ description: 'Product not found' })
   async getProduct(@Param('id') id: string) {
-    const product = await this.searchService.getProduct(id)
+    const product = await this.productsService.getProduct(id)
     if (!product) {
       throw new NotFoundException('Product not found')
     }
@@ -120,7 +124,7 @@ export class ProductsController {
     @Query('sort-by') sortBy: 'name' | 'price' | 'stock' = 'name',
     @Query('order') order: 'asc' | 'desc' = 'asc',
   ) {
-    return this.searchService.listAllProducts(sortBy, order)
+    return this.productsService.listAllProducts(sortBy, order)
   }
 
   @Get('/search/:query')
@@ -146,6 +150,6 @@ export class ProductsController {
     @Query('sort-by') sortBy: 'name' | 'price' | 'stock' = 'name',
     @Query('order') order: 'asc' | 'desc' = 'asc',
   ) {
-    return this.searchService.searchProducts(query, sortBy, order)
+    return this.productsService.searchProducts(query, sortBy, order)
   }
 }
