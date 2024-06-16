@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common'
-import { SearchModule } from 'src/search/search.module'
 
 import { ProductsController } from '../products/products.controller'
 import { ProductsService } from '../products/products.service'
+import { SearchModule } from '../search/search.module'
 
 @Module({
   imports: [SearchModule],

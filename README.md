@@ -58,16 +58,12 @@ $ pnpm run test:e2e
 $ pnpm run test:cov
 ```
 
-## Support
+# Endpoint documentation
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Swagger endpoint docs
 
-## Stay in touch
+Available at /api
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Endpoint json
 
-## License
-
-Nest is [MIT licensed](LICENSE).
+Available at /api-json
