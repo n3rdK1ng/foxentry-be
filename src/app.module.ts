@@ -5,6 +5,7 @@ import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { CustomersModule } from './customers/customers.module'
 import { validate } from './env.validation'
+import { OrdersModule } from './orders/orders.module'
 import { ProductsModule } from './products/products.module'
 
 @Module({
@@ -15,6 +16,7 @@ import { ProductsModule } from './products/products.module'
     }),
     ProductsModule,
     CustomersModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
